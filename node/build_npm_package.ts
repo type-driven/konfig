@@ -14,10 +14,10 @@ await build({
   },
   mappings: {
     // ramda
-    "https://deno.land/x/ramda@v0.27.2/mod.ts": {
-      name: "ramda",
-      version: "0.28.0",
-    },
+    // "https://deno.land/x/ramda@v0.27.2/mod.ts": {
+    //   name: "ramda",
+    //   version: "0.28.0",
+    // },
   },
   package: {
     // package.json properties

@@ -1,6 +1,7 @@
 import { right } from "$fun/either.ts";
 import { assertEquals } from "https://deno.land/std@0.162.0/testing/asserts.ts";
-import { arg, compose, env, fallback } from "../src/mod.ts";
+import { pipe } from "$fun/fn.ts";
+import { arg, compose, env, fallback, schema } from "../src/mod.ts";
 
 Deno.test("env", () => {
   const expected = right("foo");
@@ -20,19 +21,26 @@ Deno.test("fallback", () => {
   assertEquals(actual, expected);
 });
 
-Deno.test("compose", async ({ step }) => {
+Deno.test("compose", async (t) => {
   const expected = right("foo");
   Deno.env.set("FOOBAR", "foo");
-  await step("env", () => {
+  await t.step("env", () => {
     const actual = compose(env("FOOBAR")).read();
     assertEquals(actual, expected);
   });
-  await step("with fallback", () => {
+  await t.step("with fallback", () => {
     const actual = compose(env("FOOBAR"), fallback("bar")).read();
     assertEquals(actual, expected);
   });
-  await step("with fallback and multi", () => {
-    const actual = compose(env("FOOBAR"), arg('foo'), fallback("bar")).read();
+  await t.step("with fallback and multi", () => {
+    const actual = compose(env("FOOBAR"), arg("foo"), fallback("bar")).read();
     assertEquals(actual, expected);
   });
+});
+
+Deno.test("schema", () => {
+  Deno.env.set("FOOBAR", "foo");
+  const expected = right({ foo: "foo" });
+  const actual = pipe({ foo: env("FOOBAR") }, schema, (s) => s.read());
+  assertEquals(actual, expected);
 });

@@ -1,5 +1,7 @@
 {
   "imports": {
+    "$fun/": "https://raw.githubusercontent.com/pixeleet/fun/main/",
+    "$std/": "https://deno.land/std@0.159.0/",
     "ramda": "https://deno.land/x/ramda@v0.27.2/mod.ts",
     "ramda/": "https://deno.land/x/ramda@v0.27.2/"
   }

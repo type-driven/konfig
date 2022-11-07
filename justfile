@@ -4,9 +4,9 @@ dev_flags := "--unstable -A -c deno.jsonc"
 prod_flags := "--check --cached-only --no-remote --import-map=vendor/import_map.json --lock lock.json"
 
 # Dependency target flags
-lock_flags := "--lock lock.json"
-import_map := "--import-map ./import_map.json"
-dep_flags := "--lock lock.json --import-map ./import_map.json"
+lock_flags := "--lock lock.json --unstable"
+import_map := "--import-map ./import_map.json --unstable"
+dep_flags := "--lock lock.json --import-map ./import_map.json --unstable"
 
 docs := "examples/*.ts benchmark*.md **/*.md"
 bench_files := "./bench/*.ts"

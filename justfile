@@ -1,10 +1,9 @@
 # Dev flags, unstable apis enabled and every permission allowed.
-dev_flags := "--unstable -A -c .deno/deno.jsonc"
+dev_flags := "-A -c .deno/deno.jsonc"
 # Should write strict --allow-xxx flags here for your prod build
 prod_flags := "--check --cached-only --no-remote --import-map=vendor/import_map.json --lock .deno/lock.json"
 
 # Dependency target flags
-import_map := "--import-map .deno/import_map.json"
 dep_flags := "--unstable --lock .deno/lock.json --import-map .deno/import_map.json"
 
 docs := "examples/*.ts benchmark*.md **/*.md"
@@ -48,7 +47,7 @@ lock:
 # Reload cache
 reload:
 	rm -rf vendor
-	deno cache -r --unstable {{import_map}} {{all_files}}
+	deno cache -r {{dep_flags}} {{all_files}}
 
 # Vendor the dependencies
 # Import map overridden as config sets the vendored import-map.
@@ -65,17 +64,17 @@ update: && deps
 # Run the benchmark(s)
 # Benchamrks end in `_bench.ts`
 bench:
-	deno bench {{import_map}} {{dev_flags}}
+	deno bench {{dep_flags}} {{dev_flags}}
 
 # Build the lib
 build-lib: cache
 	mkdir -p lib
-	deno bundle {{import_map}} mod.ts lib/index.js
+	deno bundle {{dep_flags}} mod.ts lib/index.js
 
 # Build the npm module VERSION needs to be set e.g. export VERSION=v1.0.0
 # @rcorreia FIXME: needs to check what is wrong in windows/wsl env.
 build-npm $VERSION="1.0.0": cache
-	deno run {{dev_flags}} {{import_map}} ./node/build_npm_package.ts {{VERSION}}
+	deno run {{dev_flags}} {{dep_flags}} ./node/build_npm_package.ts {{VERSION}}
 
 # locally cache (locked) dependencies
 cache:
@@ -91,8 +90,8 @@ lint:
 
 # run tests with coverage and doc-tests
 test: clean
-	deno test {{import_map}} {{dev_flags}} --coverage=cov_profile {{test_files}}
-	deno test {{import_map}} {{dev_flags}} --doc mod.ts
+	deno test {{dep_flags}} {{dev_flags}} --coverage=cov_profile {{test_files}}
+	deno test {{dep_flags}} {{dev_flags}} --doc mod.ts
 
 # Profiling
 debug:

@@ -1,7 +1,7 @@
 import convict from "npm:convict";
 import { pipe } from "$fun/fn.ts";
-import { env, schema } from "./mod.ts";
 import { getOrElse } from "$fun/either.ts";
+import { env, schema } from "./mod.ts";
 
 Deno.env.set("NODE_ENV", "production");
 

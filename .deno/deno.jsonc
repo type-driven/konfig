@@ -7,7 +7,7 @@
   "compilerOptions": {
     "allowJs": true,
     "lib": ["deno.window", "deno.unstable"],
-    "strict": true
+    "strict": false
   },
   "importMap": "../vendor/import_map.json",
   "lint": {

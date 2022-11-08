@@ -1,5 +1,5 @@
 # Dev flags, unstable apis enabled and every permission allowed.
-dev_flags := "--unstable -A -c deno.jsonc"
+dev_flags := "-A -c deno.jsonc"
 # Should write strict --allow-xxx flags here for your prod build
 prod_flags := "--check --cached-only --no-remote --import-map=vendor/import_map.json --lock lock.json"
 
@@ -23,7 +23,7 @@ default: chores && build
 chores: update lint format test bench
 
 # build binary, bundle, node module
-build: build-bin build-lib build-npm
+build: build-lib build-npm
 
 # Update dependencies to latest versions.
 udd paths:
@@ -64,11 +64,7 @@ update: && deps
 # Run the benchmark(s)
 # Benchamrks end in `_bench.ts`
 bench:
-	deno bench {{dev_flags}}
-
-# Build the bin
-build-bin: cache
-	deno compile {{prod_flags}} -o bin/hello_deno ./src/main.ts
+	deno bench {{dev_flags}} {{import_map}}
 
 # Build the lib
 build-lib: cache
@@ -94,8 +90,8 @@ lint:
 
 # run tests with coverage and doc-tests
 test: clean
-	deno test {{dev_flags}} --coverage=cov_profile {{test_files}}
-	deno test {{dev_flags}} --doc src/main.ts
+	deno test {{dev_flags}} {{import_map}} --coverage=cov_profile {{test_files}}
+	deno test {{dev_flags}} {{import_map}} --doc src/mod.ts
 
 # Profiling
 debug:

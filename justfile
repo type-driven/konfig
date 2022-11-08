@@ -1,20 +1,21 @@
 # Dev flags, unstable apis enabled and every permission allowed.
-dev_flags := "-A -c deno.jsonc"
+dev_flags := "--unstable -A -c .deno/deno.jsonc"
 # Should write strict --allow-xxx flags here for your prod build
-prod_flags := "--check --cached-only --no-remote --import-map=vendor/import_map.json --lock lock.json"
+prod_flags := "--check --cached-only --no-remote --import-map=vendor/import_map.json --lock .deno/lock.json"
 
 # Dependency target flags
-lock_flags := "--lock lock.json --unstable"
-import_map := "--import-map ./import_map.json --unstable"
-dep_flags := "--lock lock.json --import-map ./import_map.json --unstable"
+import_map := "--import-map .deno/import_map.json"
+dep_flags := "--unstable --lock .deno/lock.json --import-map .deno/import_map.json"
 
 docs := "examples/*.ts benchmark*.md **/*.md"
-bench_files := "./bench/*.ts"
+bench_files := "./*_bench.ts"
 node_files := "./node/*.ts"
-source_files := "./src/*.ts"
-test_files := "./test/*.ts"
+source_files := "./*.ts"
+test_files := "./*_test.ts"
 
-all_files := "./bench/*.ts ./node/*.ts ./src/*.ts ./test/*.ts"
+all_files := "./*.ts ./node/*.ts"
+
+deno_folder := ".deno/"
 
 # Run all tasks. 
 default: chores && build
@@ -47,7 +48,7 @@ lock:
 # Reload cache
 reload:
 	rm -rf vendor
-	deno cache -r {{import_map}} {{all_files}}
+	deno cache -r --unstable {{import_map}} {{all_files}}
 
 # Vendor the dependencies
 # Import map overridden as config sets the vendored import-map.
@@ -64,12 +65,12 @@ update: && deps
 # Run the benchmark(s)
 # Benchamrks end in `_bench.ts`
 bench:
-	deno bench {{dev_flags}} {{import_map}}
+	deno bench {{import_map}} {{dev_flags}}
 
 # Build the lib
 build-lib: cache
 	mkdir -p lib
-	deno bundle {{import_map}} ./src/mod.ts lib/index.js
+	deno bundle {{import_map}} mod.ts lib/index.js
 
 # Build the npm module VERSION needs to be set e.g. export VERSION=v1.0.0
 # @rcorreia FIXME: needs to check what is wrong in windows/wsl env.
@@ -78,7 +79,7 @@ build-npm $VERSION="1.0.0": cache
 
 # locally cache (locked) dependencies
 cache:
-	deno cache {{lock_flags}} {{all_files}}
+	deno cache {{dep_flags}} {{all_files}}
 
 # `deno fmt` docs and files
 format:
@@ -86,16 +87,16 @@ format:
 
 # `deno lint` all files
 lint:
-	deno lint {{all_files}}
+	deno lint -c .deno/deno.jsonc {{all_files}}
 
 # run tests with coverage and doc-tests
 test: clean
-	deno test {{dev_flags}} {{import_map}} --coverage=cov_profile {{test_files}}
-	deno test {{dev_flags}} {{import_map}} --doc src/mod.ts
+	deno test {{import_map}} {{dev_flags}} --coverage=cov_profile {{test_files}}
+	deno test {{import_map}} {{dev_flags}} --doc mod.ts
 
 # Profiling
 debug:
-	deno run --v8-flags=--prof --inspect-brk {{dev_flags}} src/main.ts
+	deno run --v8-flags=--prof --inspect-brk {{dev_flags}} main.ts
 
 # Publish the npm module from CI
 publish: build-npm

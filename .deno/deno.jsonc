@@ -1,7 +1,7 @@
 {
   "metadata": {
     "minDenoVersion": "1.26",
-    "name": "hello_deno",
+    "name": "konfig",
     "version": "1.0.0"
   },
   "compilerOptions": {
@@ -9,7 +9,7 @@
     "lib": ["deno.window", "deno.unstable"],
     "strict": true
   },
-  "importMap": "./vendor/import_map.json",
+  "importMap": "../vendor/import_map.json",
   "lint": {
     "files": {
       "include": ["*.ts, **/*.ts"],

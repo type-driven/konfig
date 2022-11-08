@@ -1,7 +1,7 @@
 import { right } from "$fun/either.ts";
 import { assertEquals } from "https://deno.land/std@0.162.0/testing/asserts.ts";
 import { pipe } from "$fun/fn.ts";
-import { arg, compose, env, fallback, schema } from "../src/mod.ts";
+import { arg, compose, env, fallback, schema } from "./mod.ts";
 
 Deno.test("env", () => {
   const expected = right("foo");

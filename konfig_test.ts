@@ -65,7 +65,17 @@ Deno.test("schema", async (t) => {
     assertEquals(actual, expected);
   });
   await t.step("nested", () => {
-     const s1 = schema({
+    Deno.env.set("FOOBAR", "foo");
+    const expected = right({ foo: "foo", bar: { foo: "foo" } });
+    const actual = pipe(
+      { foo: env("FOOBAR"), bar: schema({ foo: env("FOOBAR") }) },
+      schema,
+      (s) => s.read(),
+    );
+    assertEquals(actual, expected);
+  });
+  await t.step("multiple errors", () => {
+    const s1 = schema({
       env: env("FOOBAR"),
       arg: arg("foo", number),
       composed: compose(env("BAZ"), arg("bar")),
@@ -87,7 +97,11 @@ Deno.test("schema", async (t) => {
         ),
         key(
           "jsonValue",
-          { tag: "Leaf", value: "JSON_VAL", reason: "Missing environment variable" },
+          {
+            tag: "Leaf",
+            value: "JSON_VAL",
+            reason: "Missing environment variable",
+          },
           "required",
         ),
       ),

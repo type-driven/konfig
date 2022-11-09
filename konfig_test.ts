@@ -6,6 +6,7 @@ import {
   compose,
   env,
   fallback,
+  interpolation,
   missing_key,
   run,
   schema,
@@ -116,15 +117,15 @@ Deno.test("schema", async (t) => {
 
 Deno.test("json", async (t) => {
   await t.step("singletion env", () => {
-    const { read } = env("JSON_VAL", json(struct({ foo: string })));
+    const { read } = env("foo", json(struct({ foo: string })));
     const expected = right({ foo: "bar" });
-    const actual = read({ JSON_VAL: '{ "foo": "bar" }' });
+    const actual = read({ foo: '{ "foo": "bar" }' });
     assertEquals(actual, expected);
   });
   await t.step("composed with fallback - success", () => {
-    Deno.env.set("JSON_VAL", '{ "foo": "baz" }');
+    Deno.env.set("JSON_VALUE", '{ "foo": "baz" }');
     const { read } = compose(
-      env("JSON_VAL", json(struct({ foo: string }))),
+      env("JSON_VALUE", json(struct({ foo: string }))),
       fallback({ foo: "bar" }),
     );
     const expected = right({ foo: "baz" });
@@ -140,4 +141,18 @@ Deno.test("json", async (t) => {
     const actual = read();
     assertEquals(actual, expected);
   });
+});
+
+Deno.test("interpolate", () => {
+  const s1 = schema({
+    foo: fallback("FOO"),
+    bar: fallback("BAR"),
+  });
+  const expected = right("foobar");
+  const actual = pipe(
+    s1,
+    interpolation(({ foo, bar }) => `${foo}${bar}`.toLowerCase()),
+    run,
+  );
+  assertEquals(actual, expected);
 });

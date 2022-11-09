@@ -1,6 +1,6 @@
 import { Decoder, string, success } from "$fun/decoder.ts";
 import { DecodeError, key, leaf, many } from "$fun/decode_error.ts";
-import { flow, pipe } from "$fun/fn.ts";
+import { flow, Fn, pipe } from "$fun/fn.ts";
 import { parse as parseFlags } from "$std/flags/mod.ts";
 import {
   alt,
@@ -10,6 +10,7 @@ import {
   mapLeft,
   right,
   sequenceStruct,
+  tryCatch,
 } from "$fun/either.ts";
 import { lookupAt, map } from "$fun/record.ts";
 import { fold } from "$fun/option.ts";
@@ -36,9 +37,9 @@ export interface Compose<A, B extends any[] = any[]> {
   read: FnEither<B, DecodeError, A>;
 }
 
-export interface Interpolation<A, B extends any[] = [Record<string, any>]> {
+export interface Interpolation<A> {
   _tag: "Interpolation";
-  read: FnEither<B, DecodeError, A>;
+  read: FnEither<[], DecodeError, A>;
 }
 
 export type Schema<
@@ -48,13 +49,15 @@ export type Schema<
   read: FnEither<[], DecodeError, { [K in keyof A]: A[K] }>;
   props: { [K in keyof A]: Parser<A[K]> };
 };
-export type Parser<A, B extends any[] = any[]> =
-  | Env<A, B>
-  | Arg<A, B>
-  | Compose<A, B>
-  | Interpolation<A, B>
-  | Fallback<A, B>
+export type Parser<A, D extends any[] = any[]> =
+  | Env<A, D>
+  | Arg<A, D>
+  | Compose<A, D>
+  | Interpolation<A>
+  | Fallback<A, D>
   | Schema<A>;
+
+export type Konfig<A> = A extends Parser<infer B> ? B : never;
 
 // Error
 export const missing_key = (key: string, msg: string) =>
@@ -117,7 +120,7 @@ export function schema<A>(
   const read = () =>
     pipe(
       props,
-      map((parser, prop) =>
+      map((parser: Parser<A[keyof A]>, prop) =>
         pipe(
           parser,
           run,
@@ -160,6 +163,21 @@ export function compose<A>(...parsers: Parser<A>[]): Compose<A> {
   };
 }
 
+// interpolate over a schema
+export function interpolation<S extends Schema<any>, A>(
+  fn: Fn<[Konfig<S>], A>,
+): Fn<[S], Interpolation<A>> {
+  const evaluateFn = (a: any): Either<DecodeError, A> =>
+    tryCatch(
+      () => fn(a),
+      (e) => leaf("interpolation", `Failed to interpolate: ${String(e)}`),
+    );
+  return (schema) => ({
+    _tag: "Interpolation",
+    read: () => pipe(schema, run, chain(evaluateFn)),
+  });
+}
+
 export function run<A>({ _tag, read }: Parser<A>): Either<DecodeError, A> {
   switch (_tag) {
     case "Env":
@@ -169,4 +187,14 @@ export function run<A>({ _tag, read }: Parser<A>): Either<DecodeError, A> {
     default:
       return read();
   }
+}
+
+export function prop<K extends string, A>(
+  key: K,
+  parser: Parser<A>,
+) {
+  return <B>(parent: Schema<B>): Schema<B & { [k in K]: A }> => {
+    const props = { ...parent.props, [key]: parser };
+    return schema(props) as Schema<B & { [k in K]: A }>;
+  };
 }

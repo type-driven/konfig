@@ -7,6 +7,7 @@ import {
   chain,
   Either,
   left,
+  map,
   mapLeft,
   right,
   sequenceStruct,
@@ -166,6 +167,7 @@ export function compose<A>(...parsers: Parser<A>[]): Compose<A> {
 // interpolate over a schema
 export function interpolation<S extends Schema<any>, A>(
   fn: Fn<[Konfig<S>], A>,
+  decoder = <Decoder<unknown, A>> string,
 ): Fn<[S], Interpolation<A>> {
   const evaluateFn = (a: any): Either<DecodeError, A> =>
     tryCatch(
@@ -174,7 +176,7 @@ export function interpolation<S extends Schema<any>, A>(
     );
   return (schema) => ({
     _tag: "Interpolation",
-    read: () => pipe(schema, run, chain(evaluateFn)),
+    read: () => pipe(schema, run, chain(evaluateFn), chain(decoder)),
   });
 }
 
@@ -189,12 +191,30 @@ export function run<A>({ _tag, read }: Parser<A>): Either<DecodeError, A> {
   }
 }
 
-export function prop<K extends string, A>(
-  key: K,
+export function prop<P extends string, A, B>(
+  prop: P,
   parser: Parser<A>,
 ) {
-  return <B>(parent: Schema<B>): Schema<B & { [k in K]: A }> => {
-    const props = { ...parent.props, [key]: parser };
-    return schema(props) as Schema<B & { [k in K]: A }>;
+  return (
+    { props }: Schema<B>,
+  ): Schema<{ [K in keyof B | P]: K extends keyof B ? B[K] : A }> => {
+    props = { ...props, [prop]: parser };
+    return schema(props) as Schema<
+      { [K in keyof B | P]: K extends keyof B ? B[K] : A }
+    >;
+  };
+}
+
+export function bind<P extends string, A, B>(
+  property: P,
+  fn: (b: B) => A,
+) {
+  return (
+    s: Schema<B>,
+  ): Schema<{ [K in keyof B | P]: K extends keyof B ? B[K] : A }> => {
+    const parser = interpolation(fn)(s);
+    return prop(property, parser)(s) as Schema<
+      { [K in keyof B | P]: K extends keyof B ? B[K] : A }
+    >;
   };
 }

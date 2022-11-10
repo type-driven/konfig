@@ -7,7 +7,6 @@ import {
   chain,
   Either,
   left,
-  map,
   mapLeft,
   right,
   sequenceStruct,

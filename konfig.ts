@@ -1,55 +1,64 @@
-import { Decoder, string, success } from "$fun/decoder.ts";
-import { DecodeError, key, leaf, many } from "$fun/decode_error.ts";
-import { flow, Fn, pipe } from "$fun/fn.ts";
-import { parse as parseFlags } from "$std/flags/mod.ts";
+import {
+  array,
+  compose as composeDecoders,
+  Decoder,
+  string,
+  success,
+} from "fun/decoder.ts";
+import { DecodeError, key, leaf, many } from "fun/decode_error.ts";
+import { flow, Fn, pipe } from "fun/fn.ts";
+import { parse as parseFlags } from "std/flags/mod.ts";
 import {
   alt,
   chain,
   Either,
+  fromNullable,
   left,
   mapLeft,
   right,
-  sequenceStruct,
   tryCatch,
-} from "$fun/either.ts";
-import { lookupAt, map } from "$fun/record.ts";
-import { fold } from "$fun/option.ts";
-import { reduce } from "$fun/array.ts";
-import { FnEither } from "$fun/fn_either.ts";
+  MonadEither
+} from "fun/either.ts";
+import { lookupAt, map, sequence } from "fun/record.ts";
+import { match } from "fun/option.ts";
+import { reduce } from "fun/array.ts";
+import { FnEither } from "fun/fn_either.ts";
 
-export interface Env<A, B extends any[] = [Record<string, unknown>]> {
+const sequenceStruct = sequence(MonadEither);
+
+export interface Env<A, B extends {} = Record<string, unknown>> {
   _tag: "Env";
   read: FnEither<B, DecodeError, A>;
 }
 
-export interface Arg<A, B extends any[] = [string[]]> {
+export interface Arg<A, B extends {} = string[]> {
   _tag: "Arg";
   read: FnEither<B, DecodeError, A>;
 }
 
-export interface Fallback<A, B extends any[] = unknown[]> {
+export interface Fallback<A, B extends {} = {}> {
   _tag: "Fallback";
   read: FnEither<B, DecodeError, A>;
 }
 
-export interface Compose<A, B extends any[] = any[]> {
+export interface Compose<A, B extends {} = {}> {
   _tag: "Compose";
   read: FnEither<B, DecodeError, A>;
 }
 
 export interface Interpolation<A> {
   _tag: "Interpolation";
-  read: FnEither<[], DecodeError, A>;
+  read: FnEither<unknown, DecodeError, A>;
 }
 
 export type Schema<
   A,
 > = {
   _tag: "Schema";
-  read: FnEither<[], DecodeError, { [K in keyof A]: A[K] }>;
+  read: FnEither<unknown, DecodeError, { [K in keyof A]: A[K] }>;
   props: { [K in keyof A]: Parser<A[K]> };
 };
-export type Parser<A, D extends any[] = any[]> =
+export type Parser<A, D extends any = any> =
   | Env<A, D>
   | Arg<A, D>
   | Compose<A, D>
@@ -60,25 +69,18 @@ export type Parser<A, D extends any[] = any[]> =
 export type Konfig<A> = A extends Parser<infer B> ? B : never;
 
 // Error
-export const missing_key = (key: string, msg: string) =>
-  pipe(
-    leaf(key, msg),
-    left,
-  );
+export const missing_key = flow(leaf, left);
 
 // Read from Deno.env
 export function env<A = string>(
   variable: string,
   decoder = <Decoder<unknown, A>> string,
 ): Env<A> {
-  const missing_env_var = missing_key(variable, "Missing environment variable");
+  const missingEnv = missing_key(variable, "Missing environment variable");
 
   const read = flow(
     lookupAt(variable),
-    fold(
-      () => missing_env_var,
-      (a) => right(a),
-    ),
+    match(() => missingEnv, (a) => right(a)),
     chain(decoder),
   );
   return ({
@@ -92,11 +94,11 @@ export function arg<A = string>(
   name: string,
   decoder = <Decoder<unknown, A>> string,
 ): Arg<A> {
-  const missing_arg = missing_key(name, "Missing argument");
+  const missingArg = missing_key(name, "Missing argument");
   const read = flow(
     parseFlags,
     lookupAt(name),
-    fold(() => missing_arg, (a) => right(a)),
+    match(() => missingArg, (a: A) => right(a)),
     chain(decoder),
   );
   return ({
@@ -165,9 +167,9 @@ export function compose<A>(...parsers: Parser<A>[]): Compose<A> {
 
 // interpolate over a schema
 export function interpolation<S extends Schema<any>, A>(
-  fn: Fn<[Konfig<S>], A>,
+  fn: Fn<Konfig<S>, A>,
   decoder = <Decoder<unknown, A>> string,
-): Fn<[S], Interpolation<A>> {
+): Fn<S, Interpolation<A>> {
   const evaluateFn = (a: any): Either<DecodeError, A> =>
     tryCatch(
       () => fn(a),
@@ -186,7 +188,7 @@ export function run<A>({ _tag, read }: Parser<A>): Either<DecodeError, A> {
     case "Arg":
       return pipe(Deno.args, read);
     default:
-      return read();
+      return read({});
   }
 }
 
@@ -217,3 +219,16 @@ export function bind<P extends string, A, B>(
     >;
   };
 }
+
+// Parser for 1st argument e.g. `deno run x.ts <first-arg>` (independent of flags)
+export const firstArgument = pipe(
+  array(string),
+  composeDecoders(
+    flow(
+      ([entrypoint]: readonly string[]) => entrypoint,
+      fromNullable(() => leaf("<entrypoint>", "Entrypoint was expected.")),
+    ),
+  ),
+  (decoder) => arg("_", decoder),
+);
+

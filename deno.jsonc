@@ -23,7 +23,7 @@
   },
   "fmt": {
     "files": {
-      "include": ["**/*"],
+      "include": ["**/*.ts"],
       "exclude": ["vendor"]
     }
   },

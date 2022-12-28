@@ -1,11 +1,7 @@
 {
   "deno.enable": true,
-  "deno.config": ".deno/deno.jsonc",
+  "deno.config": "./deno.jsonc",
   "deno.unstable": true,
-  "deno.importMap": ".deno/import_map.json",
+  "deno.importMap": "./import_map.json",
   "deno.codeLens.test": true,
-  "deno.codeLens.testArgs": [
-    "--allow-all",
-    "--no-check"
-  ]
 }

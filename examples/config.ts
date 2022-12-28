@@ -1,6 +1,6 @@
-import { json, number, string, struct } from "$fun/decoder.ts";
-import { pipe } from "$fun/fn.ts";
-import { arg, compose, env, fallback, schema, bind, Konfig } from "../mod.ts";
+import { json, number, string, struct } from "fun/decoder.ts";
+import { pipe } from "fun/fn.ts";
+import { arg, bind, compose, env, fallback, Konfig, schema } from "../mod.ts";
 
 export const s1 = pipe(
   schema({
@@ -11,6 +11,9 @@ export const s1 = pipe(
       env("JSON_VAL", json(struct({ foo: string }))),
       fallback({ foo: "bar" }),
     ),
+    nested: schema({
+      env: compose(env("NESTED"), fallback("nested")),
+    }),
   }),
   bind("bound", ({ env, arg, composed }) => `${env}-${arg}-${composed}`),
 );

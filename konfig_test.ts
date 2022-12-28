@@ -1,6 +1,6 @@
-import { isLeft, left, right } from "$fun/either.ts";
-import { assert, assertEquals } from "$std/testing/asserts.ts";
-import { pipe } from "$fun/fn.ts";
+import { isLeft, left, right } from "fun/either.ts";
+import { assert, assertEquals } from "std/testing/asserts.ts";
+import { pipe } from "fun/fn.ts";
 import {
   arg,
   compose,
@@ -11,8 +11,8 @@ import {
   run,
   schema,
 } from "./mod.ts";
-import { json, number, string, struct } from "$fun/decoder.ts";
-import { key, many } from "$fun/decode_error.ts";
+import { json, number, string, struct } from "fun/decoder.ts";
+import { key, many } from "fun/decode_error.ts";
 
 Deno.test("env", async (t) => {
   await t.step("right", () => {
@@ -37,7 +37,7 @@ Deno.test("arg", () => {
 
 Deno.test("fallback", () => {
   const expected = right("bar");
-  const actual = fallback("bar").read();
+  const actual = fallback("bar").read({});
   assertEquals(actual, expected);
 });
 
@@ -45,15 +45,15 @@ Deno.test("compose", async (t) => {
   const expected = right("foo");
   Deno.env.set("FOOBAR", "foo");
   await t.step("singleton", () => {
-    const actual = compose(env("FOOBAR")).read();
+    const actual = compose(env("FOOBAR")).read({});
     assertEquals(actual, expected);
   });
   await t.step("with fallback", () => {
-    const actual = compose(env("FOOBAR"), fallback("bar")).read();
+    const actual = compose(env("FOOBAR"), fallback("bar")).read({});
     assertEquals(actual, expected);
   });
   await t.step("with fallback and multi", () => {
-    const actual = compose(env("FOOBAR"), arg("foo"), fallback("bar")).read();
+    const actual = compose(env("FOOBAR"), arg("foo"), fallback("bar")).read({});
     assertEquals(actual, expected);
   });
 });
@@ -62,7 +62,7 @@ Deno.test("schema", async (t) => {
   await t.step("simple", () => {
     Deno.env.set("FOOBAR", "foo");
     const expected = right({ foo: "foo" });
-    const actual = pipe({ foo: env("FOOBAR") }, schema, (s) => s.read());
+    const actual = pipe({ foo: env("FOOBAR") }, schema, (s) => s.read({}));
     assertEquals(actual, expected);
   });
   await t.step("nested", () => {
@@ -71,7 +71,7 @@ Deno.test("schema", async (t) => {
     const actual = pipe(
       { foo: env("FOOBAR"), bar: schema({ foo: env("FOOBAR") }) },
       schema,
-      (s) => s.read(),
+      (s) => s.read({}),
     );
     assertEquals(actual, expected);
   });
@@ -129,7 +129,7 @@ Deno.test("json", async (t) => {
       fallback({ foo: "bar" }),
     );
     const expected = right({ foo: "baz" });
-    const actual = read();
+    const actual = read({});
     assertEquals(actual, expected);
   });
   await t.step("composed with fallback - fail", () => {
@@ -138,7 +138,7 @@ Deno.test("json", async (t) => {
       fallback({ foo: "bar" }),
     );
     const expected = right({ foo: "bar" });
-    const actual = read();
+    const actual = read({});
     assertEquals(actual, expected);
   });
 });

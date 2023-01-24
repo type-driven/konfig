@@ -57,8 +57,8 @@ debug:
 	deno run --v8-flags=--prof --inspect-brk {{dev_flags}} main.ts
 
 # Run a script locally in dev mode
-run $ENTRYPOINT="main.ts":
-	deno run {{dev_flags}} {{ENTRYPOINT}}
+run $ENTRYPOINT="main.ts" $ARGS="":
+	deno run {{dev_flags}} {{ENTRYPOINT}} {{ARGS}}
 
 # run tests with coverage and doc-tests
 test: _clean
@@ -75,11 +75,12 @@ update: && deps
 # Build the lib
 _build-lib: _cache
 	mkdir -p lib
-	deno bundle {{prod_flags}} mod.ts lib/index.js
+	deno bundle --no-check {{prod_flags}} mod.ts lib/index.js
 
 # Build the npm module VERSION needs to be set e.g. export VERSION=v1.0.0
 _build-npm: _cache
-	deno run --allow-all {{prod_flags}} ./build_npm_package.ts {{env_var_or_default('VERSION', 'v1.0.0')}}
+	just run ./scripts/download_dnt_wasm.ts
+	just run ./scripts/build_npm_package.ts {{env_var_or_default('VERSION', 'v1.0.0')}}
 
 # locally cache (locked) dependencies
 _cache:

@@ -14,10 +14,10 @@ await build({
   },
   mappings: {
     // ramda
-    // "https://deno.land/x/ramda@v0.27.2/mod.ts": {
-    //   name: "ramda",
-    //   version: "0.28.0",
-    // },
+    "https://deno.land/x/ramda@v0.27.2/mod.ts": {
+      name: "ramda",
+      version: "0.28.0",
+    },
   },
   package: {
     // package.json properties
@@ -36,3 +36,7 @@ await build({
 // post build steps
 Deno.copyFileSync("LICENSE", "npm/LICENSE");
 Deno.copyFileSync("README.md", "npm/README.md");
+Deno.writeTextFileSync(
+  "npm/.npmrc",
+  "//registry.npmjs.org/:_authToken=${NPM_TOKEN}",
+);

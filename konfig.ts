@@ -123,7 +123,7 @@ export function flag<A = string>(
   );
   return ({
     _tag: "Flag",
-    read,
+    read: (as) => read(as, { "--": true }),
   });
 }
 

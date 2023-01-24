@@ -90,12 +90,12 @@ Deno.test("schema", async (t) => {
       manyErr(
         keyErr(
           "flag",
-          { tag: "Leaf", value: "foo", reason: "Missing flagument" },
+          { tag: "Leaf", value: "foo", reason: "Missing argument" },
           "required",
         ),
         keyErr(
           "pipelined",
-          { tag: "Leaf", value: "bar", reason: "Missing flagument" },
+          { tag: "Leaf", value: "bar", reason: "Missing argument" },
           "required",
         ),
         keyErr(

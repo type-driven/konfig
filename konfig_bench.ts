@@ -1,7 +1,7 @@
 import convict from "npm:convict";
 import { pipe } from "fun/fn.ts";
 import { getOrElse } from "fun/either.ts";
-import { env, schema } from "./mod.ts";
+import { env, fallback, flag, pipeline, schema } from "./mod.ts";
 
 Deno.env.set("NODE_ENV", "production");
 
@@ -20,9 +20,11 @@ Deno.bench("convict", () => {
 });
 
 Deno.bench("konfig", () => {
+  const config = schema({
+    env: pipeline(env("NODE_ENV"), flag("node-env"), fallback("development")),
+  });
   pipe(
-    { foo: env("NODE_ENV") },
-    schema,
+    config,
     (s) => s.read(),
     getOrElse((): any => {
       throw new Error("Invalid configuration");

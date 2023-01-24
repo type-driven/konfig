@@ -1,11 +1,14 @@
 import {
   array,
-  compose as composeDecoders,
+  compose,
+  DecodeError,
   Decoder,
+  keyErr,
+  leafErr,
+  manyErr,
   string,
   success,
 } from "fun/decoder.ts";
-import { DecodeError, key, leaf, many } from "fun/decode_error.ts";
 import { flow, Fn, pipe } from "fun/fn.ts";
 import { parse as parseFlags } from "std/flags/mod.ts";
 import {
@@ -15,9 +18,9 @@ import {
   fromNullable,
   left,
   mapLeft,
+  MonadEither,
   right,
   tryCatch,
-  MonadEither
 } from "fun/either.ts";
 import { lookupAt, map, sequence } from "fun/record.ts";
 import { match } from "fun/option.ts";
@@ -26,26 +29,41 @@ import { FnEither } from "fun/fn_either.ts";
 
 const sequenceStruct = sequence(MonadEither);
 
+/**
+ * Represents an ENV variable
+ */
 export interface Env<A, B extends {} = Record<string, unknown>> {
   _tag: "Env";
   read: FnEither<B, DecodeError, A>;
 }
 
-export interface Arg<A, B extends {} = string[]> {
-  _tag: "Arg";
+/**
+ * Represents a `--flag` argument
+ */
+export interface Flag<A, B extends {} = string[]> {
+  _tag: "Flag";
   read: FnEither<B, DecodeError, A>;
 }
 
+/**
+ * Represents a default value if the parser fails
+ */
 export interface Fallback<A, B extends {} = {}> {
   _tag: "Fallback";
   read: FnEither<B, DecodeError, A>;
 }
 
-export interface Compose<A, B extends {} = {}> {
-  _tag: "Compose";
+/**
+ * Try multiple parsers until one succeeds
+ */
+export interface Pipeline<A, B extends {} = {}> {
+  _tag: "Pipeline";
   read: FnEither<B, DecodeError, A>;
 }
 
+/**
+ * Use a function, which has access to already parased values.
+ */
 export interface Interpolation<A> {
   _tag: "Interpolation";
   read: FnEither<unknown, DecodeError, A>;
@@ -53,15 +71,17 @@ export interface Interpolation<A> {
 
 export type Schema<
   A,
+  D = unknown,
 > = {
   _tag: "Schema";
-  read: FnEither<unknown, DecodeError, { [K in keyof A]: A[K] }>;
+  read: () => Either<DecodeError, { [K in keyof A]: A[K] }>;
+  // | ((d: D) => Either<DecodeError, { [K in keyof A]: A[K] }>);
   props: { [K in keyof A]: Parser<A[K]> };
 };
 export type Parser<A, D extends any = any> =
   | Env<A, D>
-  | Arg<A, D>
-  | Compose<A, D>
+  | Flag<A, D>
+  | Pipeline<A, D>
   | Interpolation<A>
   | Fallback<A, D>
   | Schema<A>;
@@ -69,14 +89,14 @@ export type Parser<A, D extends any = any> =
 export type Konfig<A> = A extends Parser<infer B> ? B : never;
 
 // Error
-export const missing_key = flow(leaf, left);
+export const missingKey = flow(leafErr, left);
 
 // Read from Deno.env
 export function env<A = string>(
   variable: string,
   decoder = <Decoder<unknown, A>> string,
 ): Env<A> {
-  const missingEnv = missing_key(variable, "Missing environment variable");
+  const missingEnv = missingKey(variable, "Missing environment variable");
 
   const read = flow(
     lookupAt(variable),
@@ -90,11 +110,11 @@ export function env<A = string>(
 }
 
 // Read from Deno.args
-export function arg<A = string>(
+export function flag<A = string>(
   name: string,
   decoder = <Decoder<unknown, A>> string,
-): Arg<A> {
-  const missingArg = missing_key(name, "Missing argument");
+): Flag<A> {
+  const missingArg = missingKey(name, "Missing argument");
   const read = flow(
     parseFlags,
     lookupAt(name),
@@ -102,7 +122,7 @@ export function arg<A = string>(
     chain(decoder),
   );
   return ({
-    _tag: "Arg",
+    _tag: "Flag",
     read,
   });
 }
@@ -127,7 +147,7 @@ export function schema<A>(
           parser,
           run,
           mapLeft((e) => {
-            const err = key(prop, e, "required");
+            const err = keyErr(prop, e, "required");
             decodeErrors.push(err);
             return err;
           }),
@@ -139,7 +159,7 @@ export function schema<A>(
           { [K in keyof A]: A[K] }
         >,
       mapLeft(() =>
-        many(...decodeErrors as [DecodeError, DecodeError, ...DecodeError[]])
+        manyErr(...decodeErrors as [DecodeError, DecodeError, ...DecodeError[]])
       ),
     );
   return {
@@ -150,17 +170,17 @@ export function schema<A>(
 }
 
 // compose
-export function compose<A>(...parsers: Parser<A>[]): Compose<A> {
+export function pipeline<A>(...parsers: Parser<A>[]): Pipeline<A> {
   const read = () =>
     pipe(
       parsers,
       reduce(
         (acc, parser) => pipe(parser, run, alt, (or) => or(acc)),
-        left<DecodeError, A>(leaf("compose", "No parsers matched")),
+        left<DecodeError, A>(leafErr("compose", "No parsers matched")),
       ),
     );
   return {
-    _tag: "Compose",
+    _tag: "Pipeline",
     read,
   };
 }
@@ -173,7 +193,7 @@ export function interpolation<S extends Schema<any>, A>(
   const evaluateFn = (a: any): Either<DecodeError, A> =>
     tryCatch(
       () => fn(a),
-      (e) => leaf("interpolation", `Failed to interpolate: ${String(e)}`),
+      (e) => leafErr("interpolation", `Failed to interpolate: ${String(e)}`),
     );
   return (schema) => ({
     _tag: "Interpolation",
@@ -185,7 +205,7 @@ export function run<A>({ _tag, read }: Parser<A>): Either<DecodeError, A> {
   switch (_tag) {
     case "Env":
       return pipe(Deno.env.toObject(), read);
-    case "Arg":
+    case "Flag":
       return pipe(Deno.args, read);
     default:
       return read({});
@@ -223,12 +243,11 @@ export function bind<P extends string, A, B>(
 // Parser for 1st argument e.g. `deno run x.ts <first-arg>` (independent of flags)
 export const firstArgument = pipe(
   array(string),
-  composeDecoders(
+  compose(
     flow(
       ([entrypoint]: readonly string[]) => entrypoint,
-      fromNullable(() => leaf("<entrypoint>", "Entrypoint was expected.")),
+      fromNullable(() => leafErr("<entrypoint>", "Entrypoint was expected.")),
     ),
   ),
-  (decoder) => arg("_", decoder),
+  (decoder) => flag("_", decoder),
 );
-

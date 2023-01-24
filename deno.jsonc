@@ -11,8 +11,12 @@
   },
   "lint": {
     "files": {
-      "include": ["**/*"],
-      "exclude": ["vendor/*"]
+      "exclude": ["vendor"]
+    }
+  },
+  "fmt": {
+    "files": {
+      "exclude": ["vendor"]
     }
   },
   "importMap": "./vendor/import_map.json",

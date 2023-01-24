@@ -39,7 +39,7 @@ bench:
 	deno bench {{dev_flags}} {{dep_flags}}
 
 # build binary, bundle, node module
-build: _build-bin _build-lib _build-npm
+build: _build-lib _build-npm
 
 # Run CI/CD Related tasks only
 ci: _check test bench build
@@ -72,10 +72,6 @@ update: && deps
 # Helper tasks
 #
 
-# Build the bin
-_build-bin: _cache
-	deno compile {{prod_flags}} -o bin/hello_deno ./main.ts
-
 # Build the lib
 _build-lib: _cache
 	mkdir -p lib
@@ -91,7 +87,7 @@ _cache:
 
 # Run checks
 _check:
-	deno check {{prod_flags}} {{all_files}}
+	deno check {{dep_flags}} {{all_files}}
 	deno fmt --check {{all_files}} {{doc_files}}
 
 # Clean before build

@@ -1,0 +1,15 @@
+{
+  "imports": {
+    "fun/array.ts": "./deno.land/x/fun@v2.0.0-alpha.9/array.ts",
+    "fun/decode_error.ts": "./deno.land/x/fun@v2.0.0-alpha.9/decode_error.ts",
+    "fun/decoder.ts": "./deno.land/x/fun@v2.0.0-alpha.9/decoder.ts",
+    "fun/either.ts": "./deno.land/x/fun@v2.0.0-alpha.9/either.ts",
+    "fun/fn.ts": "./deno.land/x/fun@v2.0.0-alpha.9/fn.ts",
+    "fun/fn_either.ts": "./deno.land/x/fun@v2.0.0-alpha.9/fn_either.ts",
+    "fun/option.ts": "./deno.land/x/fun@v2.0.0-alpha.9/option.ts",
+    "fun/record.ts": "./deno.land/x/fun@v2.0.0-alpha.9/record.ts",
+    "std/flags/mod.ts": "./deno.land/std@0.159.0/flags/mod.ts",
+    "std/testing/asserts.ts": "./deno.land/std@0.159.0/testing/asserts.ts",
+    "https://deno.land/": "./deno.land/"
+  }
+}

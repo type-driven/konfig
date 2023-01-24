@@ -9,24 +9,13 @@
     "lib": ["deno.window", "deno.unstable"],
     "strict": false
   },
-  "importMap": "./vendor/import_map.json",
   "lint": {
     "files": {
-      "include": ["*.ts, **/*.ts"],
-      "exclude": ["vendor"]
-    },
-    "rules": {
-      "tags": ["recommended"],
-      "include": [],
-      "exclude": ["no-unused-vars", "no-explicit-any", "no-empty-pattern"]
+      "include": ["**/*"],
+      "exclude": ["vendor/*"]
     }
   },
-  "fmt": {
-    "files": {
-      "include": ["**/*.ts"],
-      "exclude": ["vendor"]
-    }
-  },
+  "importMap": "./vendor/import_map.json",
   "tasks": {
     "build": "just build",
     "format": "just format",

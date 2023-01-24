@@ -1,6 +1,6 @@
 {
   "imports": {
-    "fun/": "https://deno.land/x/fun@v2.0.0-alpha.9/",
-    "std/": "https://deno.land/std@0.159.0/"
+    "fun/": "https://deno.land/x/fun@v2.0.0-alpha.10/",
+    "std/": "https://deno.land/std@0.173.0/"
   }
 }

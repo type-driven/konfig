@@ -1,5 +1,4 @@
-bin
-cov_profile
-lib
-npm
-vendor
+/bin
+/cov_profile
+/lib
+/npm

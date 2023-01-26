@@ -1,6 +1,6 @@
 import { json, number, string, struct } from "fun/decoder.ts";
 import { pipe } from "fun/fn.ts";
-import { bind, env, fallback, flag, Konfig, pipeline, schema } from "../mod.ts";
+import { bind, env, fallback, flag, Konfig, pipeline, schema } from "konfig";
 
 export const s1 = pipe(
   schema({

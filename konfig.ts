@@ -32,7 +32,7 @@ const sequenceStruct = sequence(MonadEither);
 /**
  * Represents an ENV variable
  */
-export interface Env<A, B extends {} = Record<string, unknown>> {
+export interface Env<A, B extends unknown = Record<string, unknown>> {
   _tag: "Env";
   read: FnEither<B, DecodeError, A>;
 }
@@ -40,7 +40,7 @@ export interface Env<A, B extends {} = Record<string, unknown>> {
 /**
  * Represents a `--flag` argument
  */
-export interface Flag<A, B extends {} = string[]> {
+export interface Flag<A, B extends unknown = string[]> {
   _tag: "Flag";
   read: FnEither<B, DecodeError, A>;
 }
@@ -48,7 +48,7 @@ export interface Flag<A, B extends {} = string[]> {
 /**
  * Represents a default value if the parser fails
  */
-export interface Fallback<A, B extends {} = {}> {
+export interface Fallback<A, B extends unknown = {}> {
   _tag: "Fallback";
   read: FnEither<B, DecodeError, A>;
 }
@@ -56,7 +56,7 @@ export interface Fallback<A, B extends {} = {}> {
 /**
  * Try multiple parsers until one succeeds
  */
-export interface Pipeline<A, B extends {} = {}> {
+export interface Pipeline<A, B extends unknown = {}> {
   _tag: "Pipeline";
   read: FnEither<B, DecodeError, A>;
 }
@@ -78,7 +78,7 @@ export type Schema<
   // | ((d: D) => Either<DecodeError, { [K in keyof A]: A[K] }>);
   props: { [K in keyof A]: Parser<A[K]> };
 };
-export type Parser<A, D extends any = any> =
+export type Parser<A, D extends unknown = any> =
   | Env<A, D>
   | Flag<A, D>
   | Pipeline<A, D>
@@ -116,7 +116,7 @@ export function flag<A = string>(
 ): Flag<A> {
   const missingArg = missingKey(name, "Missing argument");
   const read = flow(
-    parseFlags,
+    (args: string[]) => parseFlags(args, { "--": true }),
     lookupAt(name),
     match(() => missingArg, (a: A) => right(a)),
     chain(decoder),

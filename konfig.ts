@@ -15,7 +15,6 @@ import {
   alt,
   chain,
   Either,
-  fromNullable,
   left,
   mapLeft,
   MonadEither,
@@ -24,7 +23,7 @@ import {
 } from "fun/either.ts";
 import { lookupAt, map, sequence } from "fun/record.ts";
 import { match } from "fun/option.ts";
-import { reduce } from "fun/array.ts";
+import { lookup, reduce } from "fun/array.ts";
 import { FnEither } from "fun/fn_either.ts";
 
 const sequenceStruct = sequence(MonadEither);
@@ -42,6 +41,14 @@ export interface Env<A, B extends unknown = Record<string, unknown>> {
  */
 export interface Flag<A, B extends unknown = string[]> {
   _tag: "Flag";
+  read: FnEither<B, DecodeError, A>;
+}
+
+/**
+ * Represents an `<nth>` argument
+ */
+export interface Positional<A, B extends unknown = string[]> {
+  _tag: "Positional";
   read: FnEither<B, DecodeError, A>;
 }
 
@@ -126,6 +133,34 @@ export function flag<A = string>(
     read,
   });
 }
+
+// Parser for nth argument e.g. `deno run x.ts <first-arg>` (independent of flags)
+export const nth = <A = string>(
+  pos: number,
+  decoder = <Decoder<unknown, A>> string,
+): Positional<A> => {
+  const idx = pos - 1;
+  const missingPos = missingKey(
+    pos,
+    `Missing positional argument: pos: ${pos} / idx ${idx}`,
+  );
+  const read = pipe(
+    array(string),
+    compose(
+      flow(
+        lookup(pos - 1),
+        match(() => missingPos, (a) => right(a)),
+        chain(decoder),
+      ),
+    ),
+    (decoder) => flag("_", decoder),
+    (parser) => parser.read,
+  );
+  return {
+    _tag: "Positional",
+    read,
+  };
+};
 
 // Fallback in case there's no value
 export function fallback<A = any>(value: A): Fallback<A> {
@@ -239,15 +274,3 @@ export function bind<P extends string, A, B>(
     >;
   };
 }
-
-// Parser for 1st argument e.g. `deno run x.ts <first-arg>` (independent of flags)
-export const firstArgument = pipe(
-  array(string),
-  compose(
-    flow(
-      ([entrypoint]: readonly string[]) => entrypoint,
-      fromNullable(() => leafErr("<entrypoint>", "Entrypoint was expected.")),
-    ),
-  ),
-  (decoder) => flag("_", decoder),
-);

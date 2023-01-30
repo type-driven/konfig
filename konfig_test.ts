@@ -7,6 +7,7 @@ import {
   flag,
   interpolation,
   missingKey,
+  nth,
   pipeline,
   run,
   schema,
@@ -32,6 +33,12 @@ Deno.test("env", async (t) => {
 Deno.test("flag", () => {
   const expected = right("bar");
   const actual = flag("foo").read(["--foo", "bar"]);
+  assertEquals(actual, expected);
+});
+
+Deno.test("nth", () => {
+  const expected = right("bar");
+  const actual = nth(2).read(["foo", "bar"]);
   assertEquals(actual, expected);
 });
 

@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "minDenoVersion": "1.30",
+    "minDenoVersion": "1.33",
     "name": "konfig",
     "version": "1.0.0"
   },

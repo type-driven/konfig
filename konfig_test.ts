@@ -89,9 +89,7 @@ Deno.test("schema", async (t) => {
       env: env("FOOBAR"),
       flag: flag("foo", number),
       pipelined: pipeline(env("BAZ"), flag("bar")),
-      jsonValue: pipeline(
-        env("JSON_VAL", json(struct({ foo: string }))),
-      ),
+      jsonValue: pipeline(env("JSON_VAL", json(struct({ foo: string })))),
     });
     const expected = pipe(
       manyErr(

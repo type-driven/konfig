@@ -1,6 +1,10 @@
-import { isLeft, left, right } from "fun/either.ts";
+import {
+  isLeft,
+  left,
+  right,
+} from "https://deno.land/x/fun@v.2.0.0-alpha.11/either.ts";
 import { assert, assertEquals } from "std/testing/asserts.ts";
-import { pipe } from "fun/fn.ts";
+import { pipe } from "https://deno.land/x/fun@v.2.0.0-alpha.11/fn.ts";
 import {
   env,
   fallback,
@@ -12,8 +16,16 @@ import {
   run,
   schema,
 } from "./mod.ts";
-import { json, number, string, struct } from "fun/decoder.ts";
-import { keyErr, manyErr } from "fun/decoder.ts";
+import {
+  json,
+  number,
+  string,
+  struct,
+} from "https://deno.land/x/fun@v.2.0.0-alpha.11/decoder.ts";
+import {
+  keyErr,
+  manyErr,
+} from "https://deno.land/x/fun@v.2.0.0-alpha.11/decoder.ts";
 
 Deno.test("env", async (t) => {
   await t.step("right", () => {

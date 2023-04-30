@@ -1,6 +1,6 @@
 import convict from "npm:convict";
-import { pipe } from "fun/fn.ts";
-import { getOrElse } from "fun/either.ts";
+import { pipe } from "https://deno.land/x/fun@v.2.0.0-alpha.11/fn.ts";
+import { getOrElse } from "https://deno.land/x/fun@v.2.0.0-alpha.11/either.ts";
 import { env, fallback, flag, pipeline, schema } from "./mod.ts";
 import { parse as parseFlags } from "std/flags/mod.ts";
 

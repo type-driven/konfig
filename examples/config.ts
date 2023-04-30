@@ -1,5 +1,10 @@
-import { json, number, string, struct } from "fun/decoder.ts";
-import { pipe } from "fun/fn.ts";
+import {
+  json,
+  number,
+  string,
+  struct,
+} from "https://deno.land/x/fun@v2.0.0-alpha.10/decoder.ts";
+import { pipe } from "https://deno.land/x/fun@v2.0.0-alpha.10/fn.ts";
 import { bind, env, fallback, flag, Konfig, pipeline, schema } from "konfig";
 
 export const s1 = pipe(

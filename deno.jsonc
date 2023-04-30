@@ -2,7 +2,7 @@
   "metadata": {
     "minDenoVersion": "1.33",
     "name": "konfig",
-    "version": "0.1.1"
+    "version": "0.1.2"
   },
   "compilerOptions": {
     "allowJs": true,
@@ -24,7 +24,6 @@
   },
   "imports": {
     "konfig": "./mod.ts",
-    "fun/": "https://deno.land/x/fun@v2.0.0-alpha.10/",
     "std/": "https://deno.land/std@0.174.0/"
   },
   "importMap": "./vendor/import_map.json",

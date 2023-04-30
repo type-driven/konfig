@@ -8,8 +8,8 @@ import {
   manyErr,
   string,
   success,
-} from "fun/decoder.ts";
-import { flow, Fn, pipe } from "fun/fn.ts";
+} from "https://deno.land/x/fun@v.2.0.0-alpha.11/decoder.ts";
+import { flow, Fn, pipe } from "https://deno.land/x/fun@v.2.0.0-alpha.11/fn.ts";
 import { parse as parseFlags } from "std/flags/mod.ts";
 import {
   alt,
@@ -20,11 +20,18 @@ import {
   MonadEither,
   right,
   tryCatch,
-} from "fun/either.ts";
-import { lookupAt, map, sequence } from "fun/record.ts";
-import { match } from "fun/option.ts";
-import { lookup, reduce } from "fun/array.ts";
-import { FnEither } from "fun/fn_either.ts";
+} from "https://deno.land/x/fun@v.2.0.0-alpha.11/either.ts";
+import {
+  lookupAt,
+  map,
+  sequence,
+} from "https://deno.land/x/fun@v.2.0.0-alpha.11/record.ts";
+import { match } from "https://deno.land/x/fun@v.2.0.0-alpha.11/option.ts";
+import {
+  lookup,
+  reduce,
+} from "https://deno.land/x/fun@v.2.0.0-alpha.11/array.ts";
+import { FnEither } from "https://deno.land/x/fun@v.2.0.0-alpha.11/fn_either.ts";
 
 const sequenceStruct = sequence(MonadEither);
 
@@ -76,10 +83,7 @@ export interface Interpolation<A> {
   read: FnEither<unknown, DecodeError, A>;
 }
 
-export type Schema<
-  A,
-  D = unknown,
-> = {
+export type Schema<A, D = unknown> = {
   _tag: "Schema";
   read: () => Either<DecodeError, { [K in keyof A]: A[K] }>;
   // | ((d: D) => Either<DecodeError, { [K in keyof A]: A[K] }>);
@@ -107,13 +111,16 @@ export function env<A = string>(
 
   const read = flow(
     lookupAt(variable),
-    match(() => missingEnv, (a) => right(a)),
+    match(
+      () => missingEnv,
+      (a) => right(a),
+    ),
     chain(decoder),
   );
-  return ({
+  return {
     _tag: "Env",
     read,
-  });
+  };
 }
 
 // Read from Deno.args
@@ -125,13 +132,16 @@ export function flag<A = string>(
   const read = flow(
     (args: string[]) => parseFlags(args, { "--": true }),
     lookupAt(name),
-    match(() => missingArg, (a: A) => right(a)),
+    match(
+      () => missingArg,
+      (a: A) => right(a),
+    ),
     chain(decoder),
   );
-  return ({
+  return {
     _tag: "Flag",
     read,
-  });
+  };
 }
 
 // Parser for nth argument e.g. `deno run x.ts <first-arg>` (independent of flags)
@@ -149,7 +159,10 @@ export const nth = <A = string>(
     compose(
       flow(
         lookup(pos - 1),
-        match(() => missingPos, (a) => right(a)),
+        match(
+          () => missingPos,
+          (a) => right(a),
+        ),
         chain(decoder),
       ),
     ),
@@ -189,12 +202,11 @@ export function schema<A>(
         )
       ),
       (props) =>
-        sequenceStruct(props) as Either<
-          DecodeError,
-          { [K in keyof A]: A[K] }
-        >,
+        sequenceStruct(props) as Either<DecodeError, { [K in keyof A]: A[K] }>,
       mapLeft(() =>
-        manyErr(...decodeErrors as [DecodeError, DecodeError, ...DecodeError[]])
+        manyErr(
+          ...(decodeErrors as [DecodeError, DecodeError, ...DecodeError[]]),
+        )
       ),
     );
   return {
@@ -247,30 +259,32 @@ export function run<A>({ _tag, read }: Parser<A>): Either<DecodeError, A> {
   }
 }
 
-export function prop<P extends string, A, B>(
-  prop: P,
-  parser: Parser<A>,
-) {
-  return (
-    { props }: Schema<B>,
-  ): Schema<{ [K in keyof B | P]: K extends keyof B ? B[K] : A }> => {
+export function prop<P extends string, A, B>(prop: P, parser: Parser<A>) {
+  return ({
+    props,
+  }: Schema<B>): Schema<
+    {
+      [K in keyof B | P]: K extends keyof B ? B[K] : A;
+    }
+  > => {
     props = { ...props, [prop]: parser };
     return schema(props) as Schema<
-      { [K in keyof B | P]: K extends keyof B ? B[K] : A }
+      {
+        [K in keyof B | P]: K extends keyof B ? B[K] : A;
+      }
     >;
   };
 }
 
-export function bind<P extends string, A, B>(
-  property: P,
-  fn: (b: B) => A,
-) {
+export function bind<P extends string, A, B>(property: P, fn: (b: B) => A) {
   return (
     s: Schema<B>,
   ): Schema<{ [K in keyof B | P]: K extends keyof B ? B[K] : A }> => {
     const parser = interpolation(fn)(s);
     return prop(property, parser)(s) as Schema<
-      { [K in keyof B | P]: K extends keyof B ? B[K] : A }
+      {
+        [K in keyof B | P]: K extends keyof B ? B[K] : A;
+      }
     >;
   };
 }

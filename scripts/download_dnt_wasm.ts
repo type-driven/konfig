@@ -21,7 +21,7 @@ try {
 
 if (shouldDownload) {
   const dntWasm = await fetch(
-    "https://github.com/denoland/dnt/blob/main/lib/pkg/dnt_wasm_bg.wasm?raw=true"
+    "https://github.com/denoland/dnt/blob/main/lib/pkg/dnt_wasm_bg.wasm?raw=true",
   );
   if (dntWasm.body) {
     const wasm = await Deno.open(out, {

@@ -2,7 +2,7 @@
   "metadata": {
     "minDenoVersion": "1.33",
     "name": "konfig",
-    "version": "1.0.0"
+    "version": "0.1.1"
   },
   "compilerOptions": {
     "allowJs": true,

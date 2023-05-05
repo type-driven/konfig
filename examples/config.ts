@@ -5,9 +5,9 @@ import {
   struct,
 } from "https://deno.land/x/fun@v2.0.0-alpha.10/decoder.ts";
 import { pipe } from "https://deno.land/x/fun@v2.0.0-alpha.10/fn.ts";
-import { bind, env, fallback, flag, Konfig, pipeline, schema } from "konfig";
+import { bind, env, extract, fallback, flag, pipeline, schema } from "konfig";
 
-export const s1 = pipe(
+export const config = pipe(
   schema({
     env: pipeline(env("FOOBAR"), fallback("foo")),
     arg: pipeline(flag("foo", number), fallback(1)),
@@ -21,7 +21,21 @@ export const s1 = pipe(
     }),
   }),
   bind("bound", ({ env, arg, composed }) => `${env}-${arg}-${composed}`),
+  extract,
 );
-export type S1 = Konfig<typeof s1>;
 
-console.log(JSON.stringify(s1.read(), null, 4));
+console.log(JSON.stringify(config, null, 4));
+/* Outputs
+{
+    "env": "foo",
+    "arg": 1,
+    "composed": "foobar",
+    "jsonValue": {
+        "foo": "bar"
+    },
+    "nested": {
+        "env": "nested"
+    },
+    "bound": "foo-1-foobar"
+}
+*/

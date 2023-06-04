@@ -3,7 +3,10 @@ import {
   left,
   right,
 } from "https://deno.land/x/fun@v.2.0.0-alpha.11/either.ts";
-import { assert, assertEquals } from "std/testing/asserts.ts";
+import {
+  assert,
+  assertEquals,
+} from "https://deno.land/std@0.190.0/testing/asserts.ts";
 import { pipe } from "https://deno.land/x/fun@v.2.0.0-alpha.11/fn.ts";
 import {
   env,

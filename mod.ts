@@ -11,7 +11,7 @@ import {
   success,
 } from "https://deno.land/x/fun@v.2.0.0-alpha.11/decoder.ts";
 import { flow, Fn, pipe } from "https://deno.land/x/fun@v.2.0.0-alpha.11/fn.ts";
-import { parse as parseFlags } from "std/flags/mod.ts";
+import { parse as parseFlags } from "https://deno.land/std@0.190.0/flags/mod.ts";
 import {
   alt,
   chain,

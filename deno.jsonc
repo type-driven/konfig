@@ -23,8 +23,7 @@
     }
   },
   "imports": {
-    "konfig": "./mod.ts",
-    "std/": "https://deno.land/std@0.174.0/"
+    "konfig": "./mod.ts"
   },
   "importMap": "./vendor/import_map.json",
   "tasks": {
@@ -33,5 +32,6 @@
     "lint": "just lint",
     "install": "just deps",
     "update": "just update"
-  }
+  },
+  "nodeModulesDir": true
 }

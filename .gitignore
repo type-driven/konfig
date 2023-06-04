@@ -2,3 +2,5 @@
 /cov_profile
 /lib
 /npm
+
+node_modules

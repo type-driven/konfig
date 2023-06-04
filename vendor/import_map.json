@@ -1,8 +1,6 @@
 {
   "imports": {
     "konfig": "../mod.ts",
-    "std/flags/mod.ts": "./deno.land/std@0.174.0/flags/mod.ts",
-    "std/testing/asserts.ts": "./deno.land/std@0.174.0/testing/asserts.ts",
     "https://deno.land/": "./deno.land/"
   }
 }

@@ -6,7 +6,7 @@ import {
 import {
   assert,
   assertEquals,
-} from "https://deno.land/std@0.190.0/testing/asserts.ts";
+} from "https://deno.land/std@0.192.0/testing/asserts.ts";
 import { pipe } from "https://deno.land/x/fun@v.2.0.0-alpha.11/fn.ts";
 import {
   env,

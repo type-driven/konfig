@@ -9,29 +9,16 @@
     "lib": ["deno.window", "deno.unstable"],
     "strict": true
   },
+  "exclude": ["vendor/**/*"],
   "lint": {
     "rules": {
       "exclude": ["no-explicit-any", "ban-types"]
-    },
-    "files": {
-      "exclude": ["vendor"]
     }
   },
-  "fmt": {
-    "files": {
-      "exclude": ["vendor"]
-    }
-  },
+
   "imports": {
     "konfig": "./mod.ts"
   },
   "importMap": "./vendor/import_map.json",
-  "tasks": {
-    "build": "just build",
-    "format": "just format",
-    "lint": "just lint",
-    "install": "just deps",
-    "update": "just update"
-  },
   "nodeModulesDir": true
 }

@@ -1,7 +1,6 @@
 import convict from "npm:convict";
 import { pipe } from "https://deno.land/x/fun@v.2.0.0-alpha.11/fn.ts";
-import { getOrElse } from "https://deno.land/x/fun@v.2.0.0-alpha.11/either.ts";
-import { env, fallback, flag, pipeline, schema } from "./mod.ts";
+import { env, extract, fallback, flag, schema } from "./mod.ts";
 import { parse as parseFlags } from "https://deno.land/std@0.192.0/flags/mod.ts";
 
 Deno.env.set("NODE_ENV", "production");
@@ -30,14 +29,10 @@ Deno.bench("convict", { group: "performance" }, () => {
 });
 
 Deno.bench("konfig", { group: "performance" }, () => {
-  const config = schema({
-    env: pipeline(env("NODE_ENV"), flag("node-env"), fallback("development")),
-  });
   pipe(
-    config,
-    (s) => s.read(),
-    getOrElse((): any => {
-      throw new Error("Invalid configuration");
+    schema({
+      env: [env("NODE_ENV"), flag("node-env"), fallback("development")],
     }),
+    extract,
   );
 });

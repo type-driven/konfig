@@ -5,20 +5,34 @@ import {
   struct,
 } from "https://deno.land/x/fun@v2.0.0-alpha.10/decoder.ts";
 import { pipe } from "https://deno.land/x/fun@v2.0.0-alpha.10/fn.ts";
-import { bind, env, extract, fallback, flag, pipeline, schema } from "konfig";
+import { bind, env, extract, fallback, flag, schema } from "konfig";
 
 export const config = pipe(
   schema({
-    env: pipeline(env("FOOBAR"), fallback("foo")),
-    arg: pipeline(flag("foo", number), fallback(1)),
-    composed: pipeline(env("BAZ"), flag("bar"), fallback("foobar")),
-    jsonValue: pipeline(
+    env: [
+      env("FOOBAR"),
+      fallback("foo"),
+    ],
+    arg: [
+      flag("foo", number),
+      fallback(1),
+    ],
+    composed: [
+      env("BAZ"),
+      flag("bar"),
+      fallback("foobar"),
+    ],
+    jsonValue: [
       env("JSON_VAL", json(struct({ foo: string }))),
       fallback({ foo: "bar" }),
-    ),
-    nested: schema({
-      env: pipeline(env("NESTED"), fallback("nested")),
-    }),
+    ],
+    naked: {
+      foo: [env("FOO"), fallback("foo")],
+      env: [env("NESTED"), fallback("nested")],
+      nestedNaked: {
+        env: [env("NESTED_NESTED"), fallback("nested-nested")],
+      },
+    },
   }),
   bind("bound", ({ env, arg, composed }) => `${env}-${arg}-${composed}`),
   extract,
@@ -33,8 +47,12 @@ console.log(JSON.stringify(config, null, 4));
     "jsonValue": {
         "foo": "bar"
     },
-    "nested": {
-        "env": "nested"
+    "naked": {
+        "foo": "foo",
+        "env": "nested",
+        "nestedNaked": {
+            "env": "nested-nested"
+        }
     },
     "bound": "foo-1-foobar"
 }

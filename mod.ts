@@ -185,10 +185,41 @@ export function fallback<A = any>(value: A): Fallback<A> {
   };
 }
 
-export function schema<A>(
-  props: Readonly<{ [K in keyof A]: Parser<A[K]> }>,
+type NakedSchema<A> = Readonly<
+  {
+    [K in keyof A]: ParserDef<A[K]>;
+  }
+>;
+type NakedPipeline<A> = Parser<A>[];
+type ParserDef<A> =
+  | Parser<A>
+  | NakedSchema<A>
+  | NakedPipeline<A>;
+
+// deno-fmt-ignore
+const isNakedSchema = <A>(parser: ParserDef<A>): parser is NakedSchema<A> => 
+  (typeof parser === "object" && !("_tag" in parser));
+
+// deno-fmt-ignore
+const isNakedPipeline = <A>(parser: ParserDef<A>): parser is NakedPipeline<A> => 
+  Array.isArray(parser);
+
+const handleNakedParsers = <A>(parser: ParserDef<A[keyof A]>) => (
+  isNakedPipeline(parser)
+    ? pipeline(...parser)
+    : (isNakedSchema(parser) ? schema(parser) : parser)
+);
+
+export function schema<A extends object>(
+  properties: {
+    [K in keyof A]: ParserDef<A[K]>;
+  },
 ): Schema<A> {
   const decodeErrors: DecodeError[] = [];
+  const props = pipe(
+    properties,
+    map(handleNakedParsers<A>),
+  ) as { [K in keyof A]: Parser<A[K]> };
   const read = () =>
     pipe(
       props,

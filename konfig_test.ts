@@ -80,6 +80,13 @@ Deno.test("pipeline", async (t) => {
     );
     assertEquals(actual, expected);
   });
+  await t.step("array pipeline", () => {
+    const expected = right({ foo: "foo" });
+    const actual = schema({
+      foo: [env("FOOBAR"), flag("foo"), fallback("bar")],
+    }).read();
+    assertEquals(actual, expected);
+  });
 });
 
 Deno.test("schema", async (t) => {
@@ -94,6 +101,16 @@ Deno.test("schema", async (t) => {
     const expected = right({ foo: "foo", bar: { foo: "foo" } });
     const actual = pipe(
       { foo: env("FOOBAR"), bar: schema({ foo: env("FOOBAR") }) },
+      schema,
+      (s) => s.read(),
+    );
+    assertEquals(actual, expected);
+  });
+  await t.step("nested naked", () => {
+    Deno.env.set("FOOBAR", "foo");
+    const expected = right({ foo: "foo", bar: { foo: "foo" } });
+    const actual = pipe(
+      { foo: env("FOOBAR"), bar: { foo: env("FOOBAR") } },
       schema,
       (s) => s.read(),
     );
